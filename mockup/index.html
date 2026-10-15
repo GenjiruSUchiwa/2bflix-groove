@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr" class="h-full bg-black antialiased scheme-only-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>2BFlix Groove</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.11"></script>
+<style>
+  :root { color-scheme: dark; }
+  html, body { height: 100%; }
+  body { background: #000; color: #fff; }
+</style>
+<style type="text/tailwindcss">
+  /* DA Spotify : cadre noir, panneaux #121212 arrondis, vert d'action, pilules, teinte tirée de l'image.
+     UX Netflix : bannière, rangées horizontales, fiches riches, lecteur plein écran.
+     Structure : écrans et fonctionnalités de Jellyfin web 10.10 (+ Home Screen Sections, Spotlight, segments média). */
+  @theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-sans--font-feature-settings: "cv11", "ss01", "ss03";
+    --color-panel: #121212;
+    --color-raised: #1f1f1f;
+    --color-elevated: #282828;
+    --color-muted: #b3b3b3;
+    --color-subtle: #727272;
+    --color-accent: #1ed760;
+    --color-accent-strong: #3be477;
+    --color-danger: #f3727f;
+  }
+  @layer base {
+    :focus-visible { outline: 2px solid var(--color-white); outline-offset: 2px; }
+    input[type="search"]::-webkit-search-cancel-button { filter: invert(1) brightness(0.8); }
+    select option { background: var(--color-elevated); }
+    dialog::backdrop { background: rgb(0 0 0 / 0.7); }
+  }
+  @utility scrollbar-none {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+  @utility scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 255 255 / 0.25) transparent;
+  }
+  /* Dégradé teinté : --tint est extraite de l'image du titre (comme les pochettes Spotify) */
+  @utility tint-hero {
+    background-image: linear-gradient(to bottom, color-mix(in oklab, var(--tint) 45%, transparent), color-mix(in oklab, var(--tint) 30%, var(--color-panel)) 65%, var(--color-panel));
+  }
+  @utility tint-bar {
+    background-image: linear-gradient(to bottom, color-mix(in oklab, var(--tint) 30%, var(--color-panel)), var(--color-panel) 18rem);
+  }
+  @utility tint-solid {
+    background-color: color-mix(in oklab, var(--tint) 55%, #000);
+  }
+  @utility scrim-bottom {
+    background-image: linear-gradient(to top, var(--color-panel) 0%, color-mix(in oklab, var(--color-panel) 70%, transparent) 30%, transparent 65%);
+  }
+  @utility scrim-left {
+    background-image: linear-gradient(to right, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.35) 45%, transparent 75%);
+  }
+  @layer components {
+    .slider { appearance: none; width: 100%; height: 1rem; background: transparent; cursor: pointer; --pct: 0%; --buf: 0%; --fill: var(--color-white); }
+    .slider:hover, .slider:focus-visible { --fill: var(--color-accent); }
+    .slider::-webkit-slider-runnable-track { height: 4px; border-radius: 9999px; background: linear-gradient(to right, var(--fill) var(--pct), rgb(255 255 255 / 0.4) var(--pct) var(--buf), rgb(255 255 255 / 0.2) var(--buf)); }
+    .slider::-moz-range-track { height: 4px; border-radius: 9999px; background: linear-gradient(to right, var(--fill) var(--pct), rgb(255 255 255 / 0.4) var(--pct) var(--buf), rgb(255 255 255 / 0.2) var(--buf)); }
+    .slider::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; margin-top: -4px; border-radius: 9999px; background: var(--color-white); opacity: 0; }
+    .slider::-moz-range-thumb { width: 12px; height: 12px; border: 0; border-radius: 9999px; background: var(--color-white); opacity: 0; }
+    .slider:hover::-webkit-slider-thumb, .slider:focus-visible::-webkit-slider-thumb { opacity: 1; }
+    .slider:hover::-moz-range-thumb, .slider:focus-visible::-moz-range-thumb { opacity: 1; }
+    .slider:focus-visible { outline-offset: 4px; border-radius: 4px; }
+    .rank { -webkit-text-stroke: 2px rgb(255 255 255 / 0.45); color: var(--color-panel); }
+    @keyframes eq { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+    .eq > span { transform-origin: bottom; animation: eq 0.9s ease-in-out infinite; }
+    .eq > span:nth-child(2) { animation-delay: -0.3s; }
+    .eq > span:nth-child(3) { animation-delay: -0.6s; }
+    @keyframes spot { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .spot-progress { transform-origin: left; animation: spot var(--spot-ms, 8000ms) linear forwards; }
+    @media (prefers-reduced-motion: reduce) { .eq > span, .spot-progress { animation: none; } }
+  }
+</style>
+</head>
+<body class="h-full font-sans text-white">
+
+<!-- Écran de connexion (Jellyfin : sélection de l'utilisateur, connexion manuelle, Quick Connect) -->
+<div id="login" hidden class="fixed inset-0 z-40 overflow-y-auto bg-black"></div>
+
+<div id="app" class="isolate flex h-full flex-col lg:gap-2 lg:p-2">
+  <!-- Barre du haut -->
+  <header id="topbar" class="flex h-16 shrink-0 items-center gap-2 pt-[env(safe-area-inset-top,0px)] pr-[max(12px,env(safe-area-inset-right,0px))] pl-[max(8px,env(safe-area-inset-left,0px))] lg:h-14 lg:px-1"></header>
+
+  <div class="flex min-h-0 flex-1 lg:gap-2">
+    <!-- Médiathèques (bureau) -->
+    <aside id="sidebar" aria-label="Médiathèques" class="flex min-h-0 w-76 shrink-0 flex-col rounded-lg bg-panel max-lg:hidden data-collapsed:w-[4.5rem]"></aside>
+    <!-- Contenu -->
+    <main id="main" tabindex="-1" class="relative min-h-0 min-w-0 flex-1 overflow-y-auto scrollbar-thin bg-panel outline-none lg:rounded-lg">
+      <div id="stickybar" class="pointer-events-none sticky top-0 z-20 -mb-16 flex h-16 items-center gap-3 px-4 opacity-0 data-show:pointer-events-auto data-show:opacity-100 sm:px-6 motion-safe:transition-opacity"></div>
+      <div id="view"></div>
+    </main>
+  </div>
+
+  <!-- Lecture à distance (barre « En cours de lecture » de Jellyfin quand on contrôle un autre appareil) -->
+  <section id="nowplaying" hidden aria-label="Lecture à distance" class="shrink-0"></section>
+
+  <!-- Onglets (mobile) -->
+  <nav id="tabbar" aria-label="Navigation principale" class="grid shrink-0 grid-cols-4 bg-linear-to-t from-black to-black/95 pb-[env(safe-area-inset-bottom,0px)] lg:hidden"></nav>
+</div>
+
+<!-- Médiathèques (mobile) -->
+<dialog id="drawer" aria-label="Médiathèques" class="m-0 h-dvh max-h-none w-[min(22rem,88vw)] max-w-none flex-col bg-panel p-0 text-white open:flex"></dialog>
+
+<!-- Fenêtre générique (filtres, ajout à une liste, fiche programme TV…) -->
+<dialog id="modal" class="m-auto max-h-[calc(100dvh-2rem)] w-[min(34rem,calc(100%-2rem))] max-w-none overflow-y-auto rounded-xl bg-raised p-0 text-white"></dialog>
+
+<!-- Menus contextuels -->
+<div id="menu" hidden role="menu" class="fixed z-50 max-h-[min(28rem,calc(100dvh-2rem))] w-64 overflow-y-auto rounded-md bg-elevated p-1 text-sm shadow-2xl"></div>
+
+<!-- Lecteur vidéo -->
+<dialog id="player" aria-label="Lecteur vidéo" class="m-0 size-full max-h-none max-w-none overflow-hidden bg-black p-0 text-white backdrop:bg-black data-idle:cursor-none"></dialog>
+
+<div class="pointer-events-none fixed inset-x-0 bottom-24 z-[60] flex justify-center px-4 lg:bottom-8">
+  <p id="toast" role="status" aria-live="polite" class="max-w-md rounded-md bg-white px-4 py-2 text-center text-sm font-medium text-black opacity-0 motion-safe:transition motion-safe:duration-200 data-show:opacity-100"></p>
+</div>
+
+<script src="data.js"></script>
+<script src="icons.js"></script>
+<script src="app.js"></script>
+<script src="views.js"></script>
+<script src="player.js"></script>
+</body>
+</html>
