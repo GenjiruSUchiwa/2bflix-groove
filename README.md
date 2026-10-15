@@ -9,8 +9,8 @@ Thème pour Jellyfin 12 : la direction artistique de Spotify (noir profond, vert
 | Dossier | Rôle |
 | --- | --- |
 | `mockup/` | Maquette interactive autonome (HTML, Tailwind, JS) avec de vraies données. Elle sert de référence visuelle et fonctionnelle. |
-| `theme/` | Le thème Jellyfin : CSS personnalisé et script injecté. En cours de développement. |
-| `tools/` | Scripts qui régénèrent les données de la maquette (`data.js`) et les icônes (`icons.js`). |
+| `theme/` | Le thème Jellyfin 12.1 : `groove.css` et `groove.js`, installés avec JavaScript Injector. Voir `theme/README.md`. |
+| `tools/` | `build.mjs` et `deploy.mjs` (assemblage et publication du thème), scripts de données de la maquette. |
 | `docs/` | Captures d'écran. |
 
 ## Ouvrir la maquette

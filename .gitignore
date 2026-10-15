@@ -1,2 +1,4 @@
 .DS_Store
 node_modules/
+# Version assemblée : contient les identifiants des comptes ciblés
+dist/
