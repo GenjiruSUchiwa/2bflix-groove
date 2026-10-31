@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&display=swap');
 
 /* =====================================================================
-   2BFlix Groove — thème Jellyfin web 12.1 (mise en page « Bureau »)
+   2BFlix Groove : thème Jellyfin web 12.1 (mise en page « Bureau »)
    DA Spotify (noir, vert, pilules, teinte tirée de l'affiche) + UX Netflix.
    À coller dans Préférences > Affichage > CSS personnalisé (un compte)
    ou dans Tableau de bord > Général > CSS personnalisé (tout le serveur).
@@ -26,7 +26,7 @@
   --g-radius: 8px;
   --g-radius-card: 6px;
   --g-font: "Inter", "Noto Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --g-sidebar: 18.5rem;
+  --g-sidebar: 19rem;
 }
 
 /* ---------- Palette MUI (préfixe --jf-) : appliquée à tous les schémas ---------- */
@@ -58,6 +58,10 @@ html[data-theme] {
 }
 
 /* ---------- Base ---------- */
+/* La maquette (Tailwind) est en border-box ; Jellyfin non */
+:where(#groove-sidebar, .groove-hero, .groove-dhero, .g-sticky, .g-epnav, .g-details, .g-progress), :where(#groove-sidebar, .groove-hero, .groove-dhero, .g-sticky, .g-epnav, .g-details, .g-progress) * { box-sizing: border-box; }
+/* La maquette est construite sur 16 px ; Jellyfin réduit la racine à 93 % */
+html { font-size: 100% !important; }
 html, body, .MuiTypography-root, .MuiButtonBase-root, .MuiInputBase-root, .MuiChip-root,
 button, input, select, textarea, .emby-button, .cardText, .sectionTitle {
   font-family: var(--g-font) !important;
@@ -66,8 +70,11 @@ button, input, select, textarea, .emby-button, .cardText, .sectionTitle {
 html, body, .backgroundContainer { background: var(--g-bg) !important; }
 body { color: var(--g-text); -webkit-font-smoothing: antialiased; }
 :focus-visible { outline: 2px solid #fff !important; outline-offset: 2px; }
+/* Conteneurs focalisés par le code à l'ouverture (tiroir, dialogues MUI) : pas de contour, il entourait tout le panneau */
+[tabindex="-1"]:focus-visible { outline: none !important; }
 * { scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 0.25) transparent; }
 ::selection { background: var(--g-accent); color: #000; }
+html.groove .backdropContainer { display: none !important; }
 .backgroundContainer.withBackdrop { background: linear-gradient(to bottom, rgb(0 0 0 / 0.55), var(--g-panel) 70%) !important; }
 
 /* Restes d'Abyss / Spotlight : neutralisés quand Groove est actif */
@@ -80,21 +87,101 @@ header.MuiAppBar-root {
   backdrop-filter: none !important;
 }
 header.MuiAppBar-root::before { display: none !important; }
-header.MuiAppBar-root .MuiToolbar-root { min-height: 4rem; gap: 0.25rem; }
-header.MuiAppBar-root .MuiButton-root {
+header.MuiAppBar-root .MuiToolbar-root { min-height: 3.5rem !important; margin-top: 0.5rem; gap: 0.25rem; padding-left: 1.75rem !important; padding-right: 0.75rem !important; }
+/* Liens de navigation : texte seul, pilule sur la page courante (maquette) */
+header.MuiAppBar-root .g-home { display: inline-flex; align-items: center; }
+header.MuiAppBar-root .MuiButton-root, header.MuiAppBar-root .g-home, header.MuiAppBar-root .g-nav-link {
   border-radius: 9999px !important;
-  padding: 0.375rem 0.875rem !important;
+  padding: 0.5rem 0.75rem !important;
+  min-width: 0 !important;
   text-transform: none !important;
-  font-weight: 600 !important;
+  font: 600 0.875rem/1.25rem var(--g-font) !important;
   letter-spacing: 0 !important;
+  white-space: nowrap;
   color: var(--g-muted) !important;
+  text-decoration: none;
 }
-header.MuiAppBar-root .MuiButton-root:hover { color: #fff !important; background: transparent !important; }
-header.MuiAppBar-root .MuiButton-textPrimary { color: #fff !important; background: rgb(255 255 255 / 0.1) !important; }
-header.MuiAppBar-root a.MuiButton-root[href="#/"] { color: #fff !important; font-weight: 700 !important; font-size: 1.05rem !important; }
-header.MuiAppBar-root .MuiIconButton-root { color: var(--g-muted); }
-header.MuiAppBar-root .MuiIconButton-root:hover { color: #fff; background: rgb(255 255 255 / 0.1); }
+header.MuiAppBar-root .MuiButton-root .MuiButton-startIcon { display: none; }
+header.MuiAppBar-root .MuiButton-root:hover, header.MuiAppBar-root .g-home:hover, header.MuiAppBar-root .g-nav-link:hover { color: #fff !important; background: transparent !important; }
+header.MuiAppBar-root .MuiButton-textPrimary, header.MuiAppBar-root .g-home[aria-current="page"], header.MuiAppBar-root .g-nav-link[data-active], header.MuiAppBar-root .g-nav-link[aria-current="page"] { color: #fff !important; background: rgb(255 255 255 / 0.1) !important; }
+/* Logo NagareTV (Inter 700, même approche que la maquette 2BFlix) à la place de l'icône Jellyfin + nom du serveur ; la colonne de gauche fait la largeur des médiathèques */
+header.MuiAppBar-root a.MuiButton-root[href="#/"], header.MuiAppBar-root .g-brand, .MuiDrawer-paper a.MuiListItemButton-root[href="#/"] {
+  flex: none; height: 2.5rem; padding: 0 !important; margin-right: 0;
+  font-size: 0 !important; color: transparent !important; background: no-repeat left center / auto 1.75rem !important;
+  /* --g-off n'existe qu'avec la colonne des médiathèques (75em et plus) : en dessous, le logo garde sa largeur propre */
+  width: max(8.75rem, calc(var(--g-off, 0px) - 1.75rem));
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 169.92 33.88' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(2 2)'%3E%3Cpath fill='%231ed760' d='M8 0H16L8 20H0L8 0Z'/%3E%3Cpath fill='%231ed760' d='M18 8H26L18 28H10L18 8Z'/%3E%3C/g%3E%3Cpath fill='%23fff' d='M39.57 26.74V5.59H44.18L50.97 16.41Q51.28 16.90 51.76 17.74Q52.24 18.57 52.78 19.54Q53.32 20.50 53.80 21.38L53.30 22.51Q53.25 21.54 53.21 20.28Q53.17 19.03 53.15 17.87Q53.14 16.71 53.14 16.06V5.59H57.50V26.74H52.89L46.72 16.94Q46.35 16.34 45.76 15.35Q45.18 14.37 44.46 13.11Q43.75 11.84 42.97 10.45L43.74 9.95Q43.83 11.51 43.88 12.88Q43.92 14.25 43.93 15.29Q43.94 16.34 43.94 16.93V26.74ZM64.19 26.99Q62.69 26.99 61.53 26.50Q60.36 26.00 59.69 25.00Q59.02 24.01 59.02 22.52Q59.02 21.24 59.49 20.40Q59.96 19.55 60.78 19.04Q61.59 18.52 62.65 18.26Q63.71 17.99 64.88 17.88Q66.25 17.74 67.06 17.61Q67.88 17.49 68.23 17.24Q68.58 17.00 68.58 16.52V16.42Q68.58 15.87 68.28 15.45Q67.99 15.03 67.44 14.79Q66.90 14.55 66.13 14.55Q65.36 14.55 64.77 14.79Q64.18 15.04 63.84 15.47Q63.50 15.91 63.44 16.50H59.51Q59.61 14.94 60.43 13.81Q61.25 12.68 62.72 12.06Q64.20 11.44 66.25 11.44Q67.79 11.44 68.99 11.79Q70.20 12.14 71.03 12.81Q71.85 13.47 72.28 14.43Q72.71 15.38 72.71 16.58V26.74H68.62V24.63H68.57Q68.18 25.36 67.59 25.89Q67.00 26.42 66.17 26.71Q65.34 26.99 64.19 26.99ZM65.34 24.09Q66.35 24.09 67.08 23.72Q67.82 23.35 68.21 22.71Q68.61 22.07 68.61 21.26V19.76Q68.43 19.85 68.13 19.94Q67.83 20.03 67.43 20.12Q67.04 20.20 66.57 20.28Q66.10 20.36 65.59 20.44Q64.88 20.55 64.30 20.78Q63.72 21.01 63.37 21.41Q63.03 21.80 63.03 22.40Q63.03 22.93 63.32 23.31Q63.60 23.69 64.12 23.89Q64.64 24.09 65.34 24.09ZM81.79 32.87Q79.66 32.87 78.18 32.27Q76.69 31.66 75.85 30.57Q75.01 29.48 74.79 28.02H78.83Q78.98 28.59 79.38 28.98Q79.79 29.38 80.40 29.59Q81.01 29.79 81.79 29.79Q83.32 29.79 84.15 28.95Q84.98 28.11 84.98 26.50V24.20H84.97Q84.53 25.08 83.87 25.64Q83.20 26.21 82.37 26.48Q81.53 26.75 80.54 26.75Q78.59 26.75 77.13 25.77Q75.66 24.80 74.86 23.08Q74.05 21.36 74.05 19.14Q74.05 16.88 74.87 15.14Q75.69 13.40 77.15 12.42Q78.60 11.44 80.51 11.44Q81.49 11.44 82.32 11.71Q83.15 11.98 83.83 12.53Q84.50 13.09 84.97 13.92H84.99V11.75H89.12V26.16Q89.12 28.53 88.20 30.01Q87.27 31.49 85.61 32.18Q83.96 32.87 81.79 32.87ZM81.62 23.40Q82.68 23.40 83.48 22.87Q84.27 22.34 84.71 21.36Q85.15 20.38 85.15 19.08Q85.15 17.76 84.71 16.79Q84.27 15.82 83.48 15.29Q82.68 14.76 81.62 14.76Q80.61 14.76 79.86 15.26Q79.10 15.77 78.69 16.73Q78.27 17.70 78.27 19.08Q78.27 20.45 78.69 21.42Q79.10 22.39 79.86 22.90Q80.61 23.40 81.62 23.40ZM95.72 26.99Q94.22 26.99 93.06 26.50Q91.89 26.00 91.23 25.00Q90.56 24.01 90.56 22.52Q90.56 21.24 91.03 20.40Q91.49 19.55 92.31 19.04Q93.12 18.52 94.18 18.26Q95.24 17.99 96.41 17.88Q97.78 17.74 98.59 17.61Q99.41 17.49 99.76 17.24Q100.11 17.00 100.11 16.52V16.42Q100.11 15.87 99.82 15.45Q99.52 15.03 98.97 14.79Q98.43 14.55 97.66 14.55Q96.89 14.55 96.30 14.79Q95.71 15.04 95.37 15.47Q95.03 15.91 94.97 16.50H91.04Q91.14 14.94 91.96 13.81Q92.78 12.68 94.25 12.06Q95.73 11.44 97.78 11.44Q99.32 11.44 100.52 11.79Q101.73 12.14 102.56 12.81Q103.39 13.47 103.81 14.43Q104.24 15.38 104.24 16.58V26.74H100.16V24.63H100.10Q99.71 25.36 99.12 25.89Q98.53 26.42 97.70 26.71Q96.87 26.99 95.72 26.99ZM96.87 24.09Q97.88 24.09 98.62 23.72Q99.35 23.35 99.75 22.71Q100.14 22.07 100.14 21.26V19.76Q99.96 19.85 99.66 19.94Q99.36 20.03 98.96 20.12Q98.57 20.20 98.10 20.28Q97.63 20.36 97.12 20.44Q96.41 20.55 95.83 20.78Q95.25 21.01 94.90 21.41Q94.56 21.80 94.56 22.40Q94.56 22.93 94.85 23.31Q95.13 23.69 95.65 23.89Q96.17 24.09 96.87 24.09ZM106.24 26.74V11.75H110.28V14.31H110.32Q110.73 12.95 111.61 12.30Q112.49 11.65 113.97 11.65Q114.34 11.65 114.65 11.66Q114.96 11.67 115.21 11.69V15.25Q114.98 15.23 114.46 15.20Q113.94 15.17 113.41 15.17Q112.55 15.17 111.88 15.56Q111.20 15.95 110.81 16.72Q110.42 17.49 110.42 18.62V26.74ZM122.97 27.08Q120.71 27.08 119.02 26.08Q117.33 25.07 116.40 23.30Q115.47 21.53 115.47 19.26Q115.47 16.97 116.42 15.20Q117.36 13.42 119.02 12.42Q120.68 11.41 122.83 11.41Q124.49 11.41 125.84 11.97Q127.19 12.54 128.17 13.58Q129.15 14.62 129.68 16.04Q130.21 17.46 130.21 19.17V20.30H116.97V17.63H128.19L126.31 18.26Q126.31 17.13 125.89 16.31Q125.48 15.48 124.72 15.04Q123.97 14.59 122.92 14.59Q121.88 14.59 121.13 15.04Q120.37 15.48 119.96 16.31Q119.55 17.13 119.55 18.26V20.09Q119.55 21.25 119.96 22.12Q120.38 22.99 121.18 23.47Q121.97 23.95 123.10 23.95Q123.92 23.95 124.55 23.71Q125.19 23.47 125.62 23.04Q126.05 22.61 126.24 22.03H130.06Q129.78 23.52 128.79 24.66Q127.80 25.79 126.29 26.44Q124.79 27.08 122.97 27.08ZM130.65 9.33V5.59H147.85V9.33H141.44V26.74H137.08V9.33ZM155.09 26.74 147.66 5.59H152.41L155.84 15.88Q156.44 17.80 157.10 20.05Q157.77 22.29 158.55 24.95H157.29Q158.04 22.29 158.68 20.05Q159.33 17.80 159.90 15.88L163.22 5.59H167.91L160.65 26.74Z'/%3E%3C/svg%3E") !important;
+}
+header.MuiAppBar-root a.MuiButton-root[href="#/"] > *, .MuiDrawer-paper a.MuiListItemButton-root[href="#/"] > * { display: none !important; }
+/* Mobile : Jellyfin remplace logo et navigation par le bouton du menu, on remet le logo à côté */
+header.MuiAppBar-root .g-brand { display: block; margin-left: 0.25rem; }
+header.MuiAppBar-root .MuiToolbar-root:has(> .g-brand) { padding-left: 0.75rem !important; }
+/* Téléphone : le symbole seul, sinon Jellyfin Enhanced range la recherche dans son menu « ... » faute de place */
+@media (max-width: 29.99em) { header.MuiAppBar-root .g-brand { width: 1.75rem; } }
+/* Jellyfin Enhanced met min-width: 0 sur le bloc de droite : tassé, il débordait à gauche sur la navigation.
+   C'est la navigation qui cède : ses plateformes passent dans « Plus » (groove-nav-compact). */
+header.MuiAppBar-root .MuiToolbar-root > .je-header-actions-host { flex-shrink: 0; }
+/* Le bouton de Jellyfin Enhanced fait 48px : sans centrage, les icônes voisines remontaient de 4px par rapport à l'avatar */
+header.MuiAppBar-root .je-header-actions-host { display: flex; align-items: center; gap: 0.25rem; }
+header.MuiAppBar-root .MuiToolbar-root > .MuiStack-root:has(> a[href="#/"]) { min-width: 0; margin-right: 1rem; }
+header.MuiAppBar-root .MuiToolbar-root > .MuiStack-root > * { flex: none; }
+/* Navigation par plateforme (groove.js) : « Apple TV+ ▾ » : Films / Séries */
+html.groove header.MuiAppBar-root .MuiStack-root > .MuiButton-root:not([href="#/"]) { display: none !important; }
+header.MuiAppBar-root .g-nav { display: flex; align-items: center; gap: 0.25rem; }
+header.MuiAppBar-root .g-nav-link { display: inline-flex; align-items: center; gap: 0.125rem; border: 0; background: transparent; cursor: pointer; }
+header.MuiAppBar-root .g-nav-link .g-mi { font-size: 1.125rem; margin-right: -0.25rem; transition: transform 0.15s; }
+header.MuiAppBar-root .g-nav-group { position: relative; }
+header.MuiAppBar-root .g-nav-sub {
+  position: absolute; z-index: 10; top: calc(100% + 0.25rem); left: 0;
+  min-width: 10rem; padding: 4px; border-radius: 6px;
+  background: var(--g-elevated); box-shadow: 0 16px 48px rgb(0 0 0 / 0.6);
+  visibility: hidden; transition: visibility 0s 0.15s;
+}
+header.MuiAppBar-root .g-nav-sub::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 0.25rem; } /* pont de survol */
+/* Au survol, ouverture et fermeture après 150ms : traverser la barre n'ouvre pas tous les menus. Au clic, tout de suite. */
+header.MuiAppBar-root .g-nav-group:hover > .g-nav-sub { visibility: visible; }
+header.MuiAppBar-root .g-nav-link[aria-expanded="true"] + .g-nav-sub { visibility: visible; transition: none; }
+header.MuiAppBar-root .g-nav-group:hover > .g-nav-link .g-mi, header.MuiAppBar-root .g-nav-link[aria-expanded="true"] .g-mi { transform: rotate(180deg); }
+header.MuiAppBar-root .g-nav-sub a { display: block; padding: 0.5rem 0.75rem; border-radius: 4px; color: #fff; font: 500 0.875rem/1.25rem var(--g-font); text-decoration: none; white-space: nowrap; }
+header.MuiAppBar-root .g-nav-sub a:hover, header.MuiAppBar-root .g-nav-sub a:focus-visible { background: rgb(255 255 255 / 0.1); }
+header.MuiAppBar-root .g-nav-sub a[aria-current="page"] { color: var(--g-accent); }
+/* « Plus » : deux colonnes, Plateformes | Parcourir.
+   Ouvert vers la gauche (« Plus » est près des icônes), vers la droite en mode compact (« Plus » suit « Accueil »). */
+header.MuiAppBar-root .g-nav-sub.g-nav-more { left: auto; right: 0; padding: 0.75rem; border-radius: 12px; box-shadow: 0 16px 48px rgb(0 0 0 / 0.6), inset 0 0 0 1px var(--g-line); }
+header.MuiAppBar-root .g-nav-sub.g-nav-more { display: flex; }
+html.groove-nav-compact header.MuiAppBar-root .g-nav-sub.g-nav-more { left: 0; right: auto; }
+/* Barre trop étroite (groove.js mesure) : les plateformes principales passent en tête de « Plus » */
+html:not(.groove-nav-compact) header.MuiAppBar-root .g-nav-row[data-main], html.groove-nav-compact header.MuiAppBar-root .g-nav > .g-nav-group:not(:has(.g-nav-more)) { display: none; }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-col { min-width: 0; }
+header.MuiAppBar-root .g-nav-col + .g-nav-col { margin-left: 0.75rem; padding-left: 0.75rem; border-left: 1px solid var(--g-line); }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-col ul { margin: 0; padding: 0; list-style: none; }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-h { margin: 0; padding: 0.25rem 0.5rem 0.5rem; color: var(--g-subtle); font: 600 0.8125rem/1.25rem var(--g-font); }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-row { display: flex; align-items: center; gap: 0.75rem; min-height: 2.5rem; padding: 0 0.5rem; }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-pthumb { flex: none; width: 1.75rem; height: 1.75rem; overflow: hidden; border-radius: 6px; background: var(--g-raised); }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-pthumb img { width: 100%; height: 100%; object-fit: cover; }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-pname { flex: 1; min-width: 7rem; color: #fff; font: 500 0.875rem/1.25rem var(--g-font); white-space: nowrap; }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-pills { flex: none; display: flex; gap: 0.25rem; }
+:is(header.MuiAppBar-root .g-nav-sub, .g-drawer) .g-nav-pills a { padding: 0.25rem 0.75rem; border-radius: 9999px; background: var(--g-hover); color: var(--g-muted); }
+:is(header.MuiAppBar-root .g-nav-sub, .g-drawer) .g-nav-pills a:hover, :is(header.MuiAppBar-root .g-nav-sub, .g-drawer) .g-nav-pills a:focus-visible { background: rgb(255 255 255 / 0.14); color: #fff; }
+:is(header.MuiAppBar-root .g-nav-sub, .g-drawer) .g-nav-pills a[aria-current="page"] { color: var(--g-accent); }
+:is(header.MuiAppBar-root .g-nav-sub, .g-drawer) .g-nav-col li > a { display: flex; align-items: center; gap: 0.75rem; min-height: 2.5rem; padding: 0 0.75rem 0 0.5rem; }
+:is(header.MuiAppBar-root, .g-drawer) .g-nav-col li > a .g-mi { font-size: 1.25rem; color: var(--g-muted); }
+@media (prefers-reduced-motion: reduce) { header.MuiAppBar-root .g-nav-link .g-mi { transition: none; } }
+header.MuiAppBar-root .MuiIconButton-root, header.MuiAppBar-root .headerButton { color: var(--g-muted) !important; width: 2.5rem; height: 2.5rem; padding: 0 !important; border-radius: 9999px !important; }
+header.MuiAppBar-root .MuiIconButton-root:hover, header.MuiAppBar-root .headerButton:hover { color: #fff !important; background: rgb(255 255 255 / 0.1) !important; }
+header.MuiAppBar-root .MuiSvgIcon-root { font-size: 1.25rem; }
 header.MuiAppBar-root .MuiAvatar-root { width: 2rem; height: 2rem; font-weight: 600; }
+/* Recherche en pilule « Que voulez-vous regarder ? », placée avant les icônes */
+@media (min-width: 86em) {
+  header.MuiAppBar-root a.MuiIconButton-root[href="#/search"] {
+    order: -1; width: clamp(12rem, 100vw - 74rem, 18rem); margin-right: 0.5rem; white-space: nowrap; overflow: hidden;
+    justify-content: flex-start; gap: 0.625rem; padding: 0 1rem 0 0.875rem !important;
+    background: var(--g-raised) !important; color: var(--g-muted) !important;
+  }
+  header.MuiAppBar-root a.MuiIconButton-root[href="#/search"]:hover { background: var(--g-elevated) !important; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
+  header.MuiAppBar-root a.MuiIconButton-root[href="#/search"]::after { content: "Que voulez-vous regarder ?"; font: 400 0.875rem var(--g-font); }
+}
+header.MuiAppBar-root a.MuiIconButton-root[href="#/search"][data-active] { color: #fff !important; background: rgb(255 255 255 / 0.1) !important; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
 header.MuiAppBar-root .MuiBadge-dot { background: var(--g-accent) !important; }
 /* 2e barre (médiathèques) : compteur, boutons et pagination en pilules */
 header.MuiAppBar-root .MuiToolbar-root + .MuiToolbar-root { background: var(--g-bg); }
@@ -122,77 +209,123 @@ header.MuiAppBar-root .MuiButtonGroup-contained .MuiButton-root:hover { backgrou
 .MuiDrawer-paper .MuiListItemButton-root:hover { background: var(--g-hover); }
 .MuiDrawer-paper .MuiListItemButton-root.Mui-selected { background: rgb(255 255 255 / 0.1) !important; }
 .MuiDrawer-paper .MuiListItemButton-root.Mui-selected .MuiListItemText-primary { color: #fff; }
+/* En-tête du tiroir : le logo NagareTV (règle du logo de la barre) à la place de l'icône Jellyfin et du numéro de version */
+.MuiDrawer-paper a.MuiListItemButton-root[href="#/"] { margin: 0.75rem 1.25rem 0.5rem !important; }
+/* Médiathèques du tiroir : remplacées par les plateformes groupées de groove.js (.g-drawer), comme le panneau « Plus » */
+.MuiDrawer-paper .g-lib-native { display: none; }
+.g-drawer { padding: 0.5rem; border-top: 1px solid var(--g-line); }
+.g-drawer .g-nav-col + .g-nav-col { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--g-line); }
+.g-drawer a { color: #fff; text-decoration: none; }
+.g-drawer .g-nav-row { min-height: 3rem; }
+.g-drawer .g-nav-pills a { padding: 0.5rem 0.875rem; font: 500 0.875rem/1.25rem var(--g-font); }
+.g-drawer .g-nav-col li > a { min-height: 3rem; border-radius: 6px; font: 500 0.875rem/1.25rem var(--g-font); }
+.g-drawer .g-nav-col li > a:hover { background: var(--g-hover); }
+.g-drawer .g-nav-col li > a[aria-current="page"] { color: var(--g-accent); }
 
 /* ---------- Pages ---------- */
 .skinBody, .mainAnimatedPages { background: transparent; }
 .page:not(#videoOsdPage):not(#loginPage):not(.selfBackdropPage) { background: var(--g-panel); }
-.page.selfBackdropPage { background: transparent !important; }
+.page.selfBackdropPage:not(#itemDetailPage), #itemDetailPage.groove-dnative { background: transparent !important; }
+#itemDetailPage:not(.groove-dnative) { background: var(--g-panel) !important; }
 
 /* ---------- Sections et rangées (accueil, suggestions, fiches) ---------- */
 .sectionTitle, .sectionTitle-cards {
-  font-size: 1.375rem !important;
-  font-weight: 700 !important;
-  letter-spacing: -0.01em;
+  margin: 0 !important;
+  font: 600 1.25rem/1.75rem var(--g-font) !important;
+  letter-spacing: 0;
+  text-wrap: balance;
   color: #fff;
 }
 .sectionTitleTextButton { color: #fff !important; }
 .sectionTitleTextButton:hover .sectionTitle { text-decoration: underline; }
 .sectionTitleTextButton .material-icons { opacity: 0.6; font-size: 1.25rem; }
 .verticalSection { margin-bottom: 1.25rem; }
+.emby-scrollbuttons { gap: 0.25rem; padding-right: 1.5rem !important; }
 .emby-scrollbuttons-button {
-  width: 2rem !important; height: 2rem !important;
+  width: 2rem !important; height: 2rem !important; padding: 0 !important; margin: 0 !important;
+  display: grid !important; place-items: center;
   border-radius: 9999px !important;
-  background: rgb(0 0 0 / 0.6) !important;
+  background: rgb(0 0 0 / 0.4) !important;
   color: #fff !important;
 }
-.emby-scrollbuttons-button:hover { background: var(--g-elevated) !important; }
+.emby-scrollbuttons-button:hover { background: rgb(255 255 255 / 0.1) !important; }
+.emby-scrollbuttons-button .material-icons { font-size: 1.25rem; }
 
 /* Tuiles « Mes médias » */
 .homeLibraryButton.raised { border-radius: var(--g-radius) !important; background: var(--g-raised) !important; }
 .homeLibraryButton.raised:hover { background: var(--g-elevated) !important; }
 
-/* ---------- Cartes : fond au survol + bouton vert (Spotify) ---------- */
-.card .cardBox { border-radius: var(--g-radius); transition: background-color 0.15s; }
-.card-hoverable:hover .cardBox, .card:focus-within .cardBox { background: var(--g-hover); }
-.cardBox:not(.visualCardBox) { padding: 0.5rem; }
-.cardScalable, .cardPadder, .cardImageContainer, .cardContent, .defaultCardBackground {
-  border-radius: var(--g-radius-card) !important;
+/* ---------- Cartes (maquette : bloc p-3 arrondi, fond blanc 7 % au survol, image nette, rond vert en bas à droite) ---------- */
+.card .cardBox { margin: 0 !important; padding: 0.75rem !important; border: 0 !important; border-radius: 6px; transition: background-color 0.15s; }
+.card-hoverable:hover .cardBox, .card:focus-within .cardBox { background: rgb(255 255 255 / 0.07); }
+.cardScalable, .cardPadder, .cardImageContainer, .cardContent, .defaultCardBackground, .blurhash-canvas {
+  border-radius: 6px !important;
 }
-.cardImageContainer { box-shadow: 0 8px 24px rgb(0 0 0 / 0.5); }
-.personCard .cardScalable, .personCard .cardPadder, .personCard .cardImageContainer, .personCard .cardContent { border-radius: 9999px !important; }
+.cardScalable { overflow: hidden; }
+.cardImageContainer { box-shadow: none; }
+.personCard .cardScalable, .personCard .cardPadder, .personCard .cardImageContainer, .personCard .cardContent, .personCard .blurhash-canvas { border-radius: 9999px !important; }
 .defaultCardBackground { background: linear-gradient(135deg, var(--g-elevated), var(--g-raised)) !important; }
-.cardText { padding-inline: 0.125rem !important; }
-.cardText-first { font-weight: 600 !important; color: #fff; }
+.cardImageIcon { color: var(--g-subtle) !important; }
+/* Textes : à gauche, 14 px, une ligne ; titre blanc medium, sous-titre gris */
+.cardText, .cardTextCentered { text-align: left !important; padding: 0 !important; margin: 0 !important; font: 400 0.875rem/1.25rem var(--g-font) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cardText-first { margin-top: 0.5rem !important; font-weight: 500 !important; color: #fff !important; }
 .cardText-secondary { color: var(--g-muted) !important; }
+.cardText .textActionButton { color: inherit !important; font: inherit !important; }
+.cardText .textActionButton:hover { text-decoration: underline; }
+.cardBox-bottompadded { padding-bottom: 0.75rem !important; }
+.cardFooter { padding: 0 !important; margin: 0 !important; }
+.personCard .cardText { text-align: center !important; }
+.personCard .cardBox { padding: 0.5rem !important; }
 .visualCardBox { background: var(--g-raised) !important; border-radius: var(--g-radius) !important; }
+/* Largeurs des cartes en rangée (maquette : affiche w-32 / sm:w-40 / xl:w-44, large w-60 / sm:w-72, carré w-36 / sm:w-44, personne w-28 / sm:w-32) */
+.scrollSlider > .overflowPortraitCard, .groove-scroller > .overflowPortraitCard { width: 8rem !important; }
+.scrollSlider > .overflowBackdropCard, .scrollSlider > .overflowSmallBackdropCard { width: 15rem !important; }
+.scrollSlider > .overflowSquareCard { width: 9rem !important; }
+.scrollSlider > .personCard.personCard { width: 7rem !important; }
+@media (min-width: 40em) {
+  .scrollSlider > .overflowPortraitCard, .groove-scroller > .overflowPortraitCard { width: 10rem !important; }
+  .scrollSlider > .overflowBackdropCard, .scrollSlider > .overflowSmallBackdropCard { width: 18rem !important; }
+  .scrollSlider > .overflowSquareCard { width: 11rem !important; }
+  .scrollSlider > .personCard.personCard { width: 8rem !important; }
+}
+@media (min-width: 80em) { .scrollSlider > .overflowPortraitCard:not(.personCard), .groove-scroller > .overflowPortraitCard { width: 11rem !important; } }
+/* Cartes en grille sur la fiche (saisons, À suivre) : mêmes largeurs que les rangées */
+#itemDetailPage .vertical-wrap > .card.portraitCard, #itemDetailPage .vertical-wrap > .card.overflowPortraitCard { width: 10rem !important; }
+#itemDetailPage .vertical-wrap > .card.backdropCard, #itemDetailPage .vertical-wrap > .card.overflowBackdropCard { width: 18rem !important; }
+@media (min-width: 80em) { #itemDetailPage .vertical-wrap > .card.portraitCard, #itemDetailPage .vertical-wrap > .card.overflowPortraitCard { width: 11rem !important; } }
 
-/* Survol : on garde l'image nette, le bouton Lecture devient un rond vert en bas à droite */
-.cardOverlayContainer { background: transparent !important; }
+/* Survol : pas de voile, seulement le rond vert de 44 px en bas à droite (Lecture) ; les autres boutons de Jellyfin restent dans le menu ⋮ */
+.cardOverlayContainer { background: transparent !important; opacity: 1 !important; }
+.cardOverlayButton-br { display: none !important; }
 .cardOverlayFab-primary, .cardOverlayButton-hover.cardOverlayFab-primary {
   position: absolute !important;
   right: 0.5rem; bottom: 0.5rem; left: auto !important; top: auto !important;
-  width: 3rem !important; height: 3rem !important;
-  margin: 0 !important;
+  width: 2.75rem !important; height: 2.75rem !important;
+  margin: 0 !important; padding: 0 !important;
+  display: grid !important; place-items: center;
   border-radius: 9999px !important;
   background: var(--g-accent) !important;
   color: #000 !important;
-  box-shadow: 0 8px 16px rgb(0 0 0 / 0.35);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   transform: translateY(0.5rem);
   opacity: 0;
-  transition: transform 0.2s, opacity 0.2s;
+  transition: transform 0.15s, opacity 0.15s;
 }
 .card-hoverable:hover .cardOverlayFab-primary, .cardOverlayFab-primary:focus-visible { transform: translateY(0); opacity: 1; }
 .cardOverlayFab-primary:hover { background: var(--g-accent-strong) !important; transform: scale(1.05) !important; }
-.cardOverlayFab-primary .cardOverlayButtonIcon { color: #000 !important; font-size: 1.75rem !important; }
-.cardOverlayButton-br { gap: 0.125rem; }
-.cardOverlayButton-br .cardOverlayButton { background: rgb(0 0 0 / 0.55) !important; border-radius: 9999px !important; }
+.cardOverlayFab-primary .cardOverlayButtonIcon { color: #000 !important; font-size: 1.25rem !important; margin: 0 !important; }
+.card:has(.itemProgressBar) .cardOverlayFab-primary { bottom: 1.25rem; }
 @media (prefers-reduced-motion: reduce) { .cardOverlayFab-primary { transition: none; transform: none; } }
+@media (pointer: coarse) { .cardOverlayFab-primary { display: none !important; } }
 
-/* Indicateurs */
+/* Indicateurs : « vu » = rond vert 24 px en haut à droite, non vus = pastille noire, progression = fine barre dans l'image */
+.cardIndicators { top: 0.5rem !important; right: 0.5rem !important; gap: 0.25rem; }
+.cardIndicators .indicator, .playedIndicator, .countIndicator { width: auto !important; min-width: 1.5rem; height: 1.5rem !important; margin: 0 !important; border-radius: 9999px !important; }
 .playedIndicator { background: var(--g-accent) !important; color: #000 !important; }
-.playedIndicator .indicatorIcon { color: #000 !important; }
-.countIndicator, .unplayedItemCount, .childCountIndicator { background: rgb(0 0 0 / 0.8) !important; color: #fff !important; font-weight: 600; }
-.itemProgressBar { background: rgb(255 255 255 / 0.25) !important; border-radius: 9999px; overflow: hidden; }
+.playedIndicator .indicatorIcon { color: #000 !important; font-size: 1rem !important; }
+.countIndicator, .unplayedItemCount, .childCountIndicator { background: rgb(0 0 0 / 0.8) !important; color: #fff !important; font: 600 0.75rem/1.5rem var(--g-font) !important; padding: 0 0.375rem !important; }
+.innerCardFooter { background: none !important; left: 0.5rem !important; right: 0.5rem !important; bottom: 0.5rem !important; width: auto !important; padding: 0 !important; }
+.itemProgressBar { height: 4px !important; background: rgb(255 255 255 / 0.25) !important; border-radius: 9999px; overflow: hidden; }
 .itemProgressBarForeground { background: var(--g-accent) !important; }
 .itemLinearProgress { background: rgb(255 255 255 / 0.25) !important; border-radius: 9999px; }
 .itemLinearProgress .MuiLinearProgress-bar { background: var(--g-accent) !important; }
@@ -273,9 +406,163 @@ h1.itemName { font-size: clamp(2rem, 4.5vw, 4.5rem) !important; }
 .trackSelections .selectContainer { margin-bottom: 0 !important; }
 .trackSelections .selectLabel { color: var(--g-muted) !important; font-size: 0.8125rem !important; font-weight: 600; }
 
+/* ---------- Fiche Groove (appliquée dès l'affichage ; groove.js ajoute .groove-dhero, ou .groove-dnative pour les types sans bannière) : mise en page de la maquette ---------- */
+#itemDetailPage:not(.groove-dnative) .itemBackdrop, #itemDetailPage:not(.groove-dnative) .detailLogo,
+#itemDetailPage:not(.groove-dnative) .detailImageContainer, #itemDetailPage:not(.groove-dnative) .infoWrapper,
+#itemDetailPage:not(.groove-dnative) .detailSectionContent > .tagline { display: none !important; }
+#itemDetailPage:not(.groove-dnative) .detailPageWrapperContainer { padding-top: 0 !important; margin-top: 0 !important; }
+.groove-dhero { position: relative; isolation: isolate; overflow: hidden; }
+.groove-dhero .g-dh-bg { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.groove-dhero .g-dh-blur { transform: scale(1.25); opacity: 0.55; filter: blur(64px); }
+.groove-dhero::before, .groove-dhero::after { content: ""; position: absolute; inset: 0; z-index: -1; }
+.groove-dhero[data-backdrop]::before { background: linear-gradient(to right, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.35) 45%, transparent 75%); }
+/* Le bas de la bannière finit dans la teinte de la barre d'actions (--g-dbar) : pas de cassure entre les deux */
+#itemDetailPage { --g-dbar: color-mix(in oklab, var(--g-tint) 30%, var(--g-panel)); }
+.groove-dhero[data-backdrop]::after { background: linear-gradient(to top, var(--g-dbar) 0%, color-mix(in oklab, var(--g-dbar) 70%, transparent) 30%, transparent 65%); }
+.groove-dhero:not([data-backdrop])::after { background: linear-gradient(to bottom, color-mix(in oklab, var(--g-tint) 45%, transparent), var(--g-dbar)); }
+.groove-dhero .g-dh-in { display: flex; flex-direction: column; justify-content: flex-end; gap: 1.5rem; min-height: 22rem; padding: 5rem 1.5rem 1.5rem; }
+.groove-dhero .g-dh-poster { flex: none; width: 9rem; aspect-ratio: 2 / 3; overflow: hidden; border-radius: var(--g-radius); box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25), inset 0 0 0 1px rgb(255 255 255 / 0.1); outline: 1px solid rgb(255 255 255 / 0.1); outline-offset: -1px; }
+.groove-dhero .g-dh-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.groove-dhero[data-backdrop] .g-dh-poster { display: none; }
+.groove-dhero:not([data-backdrop]) .g-dh-poster { align-self: center; }
+.groove-dhero .g-dh-body { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; }
+.groove-dhero .g-dh-eyebrow { margin: 0; font: 500 0.875rem/1.25rem var(--g-font); color: rgb(255 255 255 / 0.85); }
+.groove-dhero .g-dh-eyebrow a { color: inherit; text-decoration: none; }
+.groove-dhero .g-dh-eyebrow a:hover { text-decoration: underline; }
+.groove-dhero .g-dh-title { margin: 0; font: 600 2.25rem/2.5rem var(--g-font); letter-spacing: -0.025em; text-wrap: balance; color: #fff; }
+.groove-dhero .g-dh-tagline { margin: 0; font: 400 1rem/1.5rem var(--g-font); color: rgb(255 255 255 / 0.8); }
+/* Infos de Jellyfin (déplacées) : une ligne séparée par des points */
+.groove-dhero .g-dh-meta .itemMiscInfo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0; margin: 0 !important; font: 400 0.875rem/1.25rem var(--g-font); color: rgb(255 255 255 / 0.85) !important; }
+.groove-dhero .g-dh-meta .itemMiscInfo:empty { display: none; }
+.groove-dhero .g-dh-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 0.5rem; font: 400 0.875rem/1.25rem var(--g-font); color: rgb(255 255 255 / 0.85); }
+.groove-dhero .g-star { display: inline-flex; align-items: center; gap: 0.25rem; }
+.groove-dhero .g-star svg { width: 1rem; height: 1rem; fill: #fff; }
+.groove-dhero .g-status { padding: 0.125rem 0.5rem; border-radius: 9999px; background: rgb(255 255 255 / 0.1); color: rgb(255 255 255 / 0.8); font: 600 0.75rem/1rem var(--g-font); }
+.groove-dhero .g-status[data-on="true"] { background: color-mix(in oklab, var(--g-accent) 15%, transparent); color: var(--g-accent); }
+.groove-dhero .g-dh-meta .mediaInfoItem { margin: 0 !important; display: inline-flex; align-items: center; }
+.groove-dhero .g-dh-meta .mediaInfoItem + .mediaInfoItem::before, .groove-dhero .g-dh-meta .mediaInfoItem + .endsAt::before { content: "·"; margin: 0 0.5rem; color: rgb(255 255 255 / 0.85); }
+/* Classification en petit badge ; son point séparateur reste hors du cadre */
+.groove-dhero .g-dh-meta .mediaInfoOfficialRating { position: relative; margin-left: 1.0625rem !important; padding: 0 0.375rem !important; font-size: 0.75rem !important; font-weight: 600; line-height: 1.125rem; border: 0 !important; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.4); border-radius: 2px !important; }
+.groove-dhero .g-dh-meta .mediaInfoOfficialRating::before { position: absolute; left: -0.7rem; margin: 0 !important; font-size: 0.875rem; font-weight: 400; }
+.groove-dhero .g-dh-meta .mediaInfoOfficialRating:first-child { margin-left: 0 !important; }
+.groove-dhero .g-dh-meta .starRatingContainer .material-icons { font-size: 1rem; margin-right: 0.25rem; }
+@media (min-width: 40em) { .groove-dhero .g-dh-poster { width: 11rem; } .groove-dhero .g-dh-title { font-size: 3rem; line-height: 1; } }
+@media (min-width: 48em) {
+  .groove-dhero .g-dh-in { flex-direction: row; align-items: flex-end; justify-content: flex-start; gap: 2rem; }
+  .groove-dhero[data-backdrop] .g-dh-poster { display: block; }
+  .groove-dhero .g-dh-poster { align-self: auto !important; }
+}
+@media (max-width: 47.99em) { .groove-dhero[data-backdrop]::before { display: none; } }
+@media (min-width: 64em) { .groove-dhero .g-dh-in { min-height: 28rem; } .groove-dhero .g-dh-poster { width: 14rem; } }
+@media (min-width: 80em) { .groove-dhero .g-dh-in { min-height: 32rem; } .groove-dhero .g-dh-title { font-size: 3.75rem; } }
+
+/* Barre d'actions teintée sous la bannière : Lecture en pilule verte avec libellé, le reste en icônes */
+#itemDetailPage:not(.groove-dnative) .detailPagePrimaryContainer { background: linear-gradient(to bottom, var(--g-dbar), var(--g-panel) 18rem) !important; }
+#itemDetailPage:not(.groove-dnative) .detailPageContent { background: transparent !important; }
+/* Le fond de la page Jellyfin s'arrête à la hauteur de l'écran : le bas de la fiche porte son propre fond */
+#itemDetailPage:not(.groove-dnative) .detailPageSecondaryContainer { background: var(--g-panel) !important; border-radius: 0 0 var(--g-radius) var(--g-radius); }
+#itemDetailPage:not(.groove-dnative) .detailRibbon { display: block !important; position: static !important; height: auto !important; margin: 0 !important; padding: 0 1.5rem !important; background: none !important; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons { display: flex; flex-wrap: wrap; justify-content: flex-start !important; gap: 0.75rem 1rem; margin: 0 !important; padding: 1.25rem 0 !important; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .detailButton { width: 2.375rem; height: 2.375rem; display: grid; place-items: center; border-radius: 9999px; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .detailButton.hide { display: none !important; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .detailButton-content { padding: 0 !important; width: auto !important; height: auto !important; background: none !important; display: grid; place-items: center; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .detailButton-icon { font-size: 1.25rem !important; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay {
+  width: auto; height: auto; display: inline-flex; flex-direction: row; align-items: center; gap: 0.5rem; margin: 0 !important;
+  padding: 0.5625rem 1.25rem 0.5625rem 0.875rem !important;
+  background: var(--g-accent) !important; color: #000 !important;
+  font: 600 0.875rem/1.25rem var(--g-font) !important;
+  transition: transform 0.15s;
+}
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay::after { content: attr(data-glabel, attr(title)); }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay:not([data-glabel])::after { content: attr(title); }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay[data-glabel]::after { content: attr(data-glabel); }
+.g-progress { max-width: 24rem; height: 4px; margin: -0.5rem 0 1.25rem; border-radius: 9999px; background: rgb(255 255 255 / 0.25); overflow: hidden; }
+.g-progress span { display: block; height: 100%; border-radius: 9999px; background: var(--g-accent); }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay:hover { background: var(--g-accent-strong) !important; transform: scale(1.03); }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay .detailButton-icon { font-size: 1.25rem !important; color: #000 !important; }
+#itemDetailPage:not(.groove-dnative) .mainDetailButtons .btnPlay:hover .detailButton-content { transform: none; }
+
+/* Contenu : pleine largeur, marges de la maquette, résumé puis pistes */
+#itemDetailPage:not(.groove-dnative) .detailPagePrimaryContent { padding: 0 1.5rem 2.5rem !important; }
+#itemDetailPage:not(.groove-dnative) .detailSection { display: flex; flex-direction: column; gap: 2rem; margin: 0 !important; padding: 0 !important; }
+#itemDetailPage:not(.groove-dnative) .detailSectionContent { order: -1; }
+#itemDetailPage:not(.groove-dnative) .detailSectionContent > p:empty { display: none; }
+#itemDetailPage:not(.groove-dnative) .itemDetailsGroup { margin: 0; }
+#itemDetailPage:not(.groove-dnative) .overview { margin: 0; color: rgb(255 255 255 / 0.9); font-size: 1rem !important; line-height: 1.75rem !important; }
+#itemDetailPage:not(.groove-dnative) .trackSelections:not(.hide) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; max-width: none; margin: 0; }
+@media (min-width: 40em) { #itemDetailPage:not(.groove-dnative) .trackSelections:not(.hide) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 80em) { #itemDetailPage:not(.groove-dnative) .trackSelections:not(.hide) { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+#itemDetailPage:not(.groove-dnative) .trackSelections .selectContainer { display: flex; flex-direction: column; gap: 0.375rem; max-width: none; min-width: 0; margin: 0 !important; }
+#itemDetailPage:not(.groove-dnative) .trackSelections .selectContainer.hide { display: none; }
+#itemDetailPage:not(.groove-dnative) .trackSelections .selectLabel { flex: none; margin: 0 !important; font: 500 0.875rem/1.25rem var(--g-font) !important; color: var(--g-muted) !important; }
+#itemDetailPage:not(.groove-dnative) .trackSelections .detailTrackSelect { width: 100%; height: auto; padding: 0.5rem 2rem 0.5rem 0.75rem !important; font: 400 0.875rem/1.25rem var(--g-font) !important; color: #fff !important; border-radius: 6px !important; background: rgb(255 255 255 / 0.07) !important; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1) !important; text-overflow: ellipsis; white-space: nowrap; opacity: 1 !important; }
+#itemDetailPage:not(.groove-dnative) .trackSelections .detailTrackSelect:hover { background: rgb(255 255 255 / 0.1) !important; }
+#itemDetailPage:not(.groove-dnative) .trackSelections .selectContainer { position: relative; }
+#itemDetailPage:not(.groove-dnative) .trackSelections .selectArrowContainer { top: auto !important; bottom: 0.5rem; right: 0.625rem; color: var(--g-muted); }
+#itemDetailPage:not(.groove-dnative) .trackSelections .selectArrow { font-size: 1.25rem !important; }
+#itemDetailPage:not(.groove-dnative) .detailVerticalSection, #itemDetailPage:not(.groove-dnative) .detailPageSecondaryContainer { padding-left: 0; }
+#itemDetailPage:not(.groove-dnative) .detailPageSecondaryContainer { padding: 0 0 4rem 0.75rem !important; }
+/* Rangées : titre à 24 px du bord, cartes (p-3) alignées dessous, 40 px entre sections */
+#itemDetailPage:not(.groove-dnative) .detailVerticalSection { margin: 0 0 1.75rem !important; padding: 0 !important; }
+#itemDetailPage:not(.groove-dnative) .detailPagePrimaryContent .detailVerticalSection { margin-left: -0.75rem !important; }
+#itemDetailPage:not(.groove-dnative) .detailVerticalSection > .sectionTitle, #itemDetailPage:not(.groove-dnative) .detailVerticalSection > .sectionTitleContainer { margin: 0 0 0.25rem !important; padding: 0 0.75rem !important; }
+#itemDetailPage:not(.groove-dnative) .detailVerticalSection .vertical-list { margin: 0 0 0 0.75rem !important; padding: 0 !important; }
+#itemDetailPage:not(.groove-dnative) .detailVerticalSection .emby-scroller, #itemDetailPage:not(.groove-dnative) .detailVerticalSection .itemsContainer { padding-left: 0 !important; margin-left: 0 !important; }
+#itemDetailPage:not(.groove-dnative) .sectionTitle { font-size: 1.25rem !important; font-weight: 600 !important; letter-spacing: 0; }
+
+/* Barre collante (maquette #stickybar) : 64 px, teinte de l'affiche, rond vert 40 px + titre */
+/* Fixe (et non sticky) : la boîte de la page Jellyfin ne fait que la hauteur de l'écran */
+.g-sticky { position: fixed; top: var(--g-appbar, 4rem); left: 0; right: 0; z-index: 998; height: 4rem; display: flex; align-items: center; gap: 0.75rem; padding: 0 1.5rem; background: color-mix(in oklab, var(--g-tint) 55%, #000); border-radius: var(--g-radius) var(--g-radius) 0 0; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+.g-sticky[data-show] { opacity: 1; pointer-events: auto; }
+.g-sticky p { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 1.125rem/1.75rem var(--g-font); }
+.g-sticky-play { flex: none; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border: 0; border-radius: 9999px; background: var(--g-accent); color: #000; cursor: pointer; transition: transform 0.15s; }
+.g-sticky-play:hover { background: var(--g-accent-strong); transform: scale(1.05); }
+.g-sticky-play svg { width: 1rem; height: 1rem; fill: currentColor; }
+@media (prefers-reduced-motion: reduce) { .g-sticky { transition: none; } }
+
+/* Série : « Prochain épisode » (maquette) */
+.g-next { display: flex; flex-direction: column; gap: 0.75rem; margin: 0 0 0.5rem; }
+.g-next + .nextUpSection { display: none !important; }
+.g-next-card { position: relative; display: grid; gap: 1rem; padding: 0.75rem; border-radius: var(--g-radius); background: rgb(255 255 255 / 0.05); }
+.g-next-card:hover { background: rgb(255 255 255 / 0.08); }
+@media (min-width: 40em) { .g-next-card { grid-template-columns: 16rem minmax(0, 1fr); align-items: center; } }
+.g-next-thumb { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; background: rgb(255 255 255 / 0.05); }
+.g-next-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.g-next-thumb .g-bar { position: absolute; left: 0.5rem; right: 0.5rem; bottom: 0.5rem; height: 4px; border-radius: 9999px; background: rgb(255 255 255 / 0.25); overflow: hidden; }
+.g-next-thumb .g-bar span { display: block; height: 100%; background: var(--g-accent); }
+.g-next-body { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.g-next-info { margin: 0; font: 400 0.875rem/1.25rem var(--g-font); color: var(--g-muted); }
+.g-next-body h3 { margin: 0; font: 600 1.125rem/1.75rem var(--g-font); }
+.g-next-body h3 a { color: #fff; text-decoration: none; }
+.g-next-body h3 a:hover { text-decoration: underline; }
+.g-next-ov { margin: 0; font: 400 0.875rem/1.25rem var(--g-font); color: var(--g-muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.g-next .groove-btn { padding: 0.5625rem 1.25rem 0.5625rem 0.875rem; font-weight: 600; }
+
+/* « Détails » (maquette) : titre, grille libellé / valeur, liens en pilules */
+.g-details { display: flex; flex-direction: column; gap: 1rem; margin: 0 0 2.5rem; padding: 0 0.75rem; }
+.g-details .itemDetailsGroup { display: grid; grid-template-columns: max-content 1fr; gap: 0.75rem 2rem; margin: 0 !important; }
+.g-details .detailsGroupItem, .g-details .itemDetailsGroup > div { display: contents; }
+.g-details .itemDetailsGroup:not(:has(.detailsGroupItem:not(.hide)))  { display: none; }
+.g-details .detailsGroupItem.hide { display: none !important; }
+.g-details .detailsGroupItem .label { margin: 0 !important; font: 500 0.875rem/1.25rem var(--g-font) !important; color: #fff !important; }
+/* 12.1 (React) : p.label + div de contenu ; anciennes versions : .label + .content */
+.g-details .detailsGroupItem > :not(.label), .g-details .detailsGroupItem > :not(.label) a { margin: 0; padding: 0 !important; font: 400 0.875rem/1.25rem var(--g-font) !important; color: var(--g-muted) !important; text-decoration: none; border-radius: 0 !important; background: none !important; letter-spacing: 0 !important; }
+.g-details .detailsGroupItem > :not(.label) a:hover { color: #fff !important; text-decoration: underline; }
+.g-details .itemExternalLinks { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 !important; font-size: 0 !important; }
+.g-details .itemExternalLinks a { display: inline-flex; align-items: center; gap: 0.375rem; margin: 0 !important; padding: 0.375rem 0.75rem 0.375rem 0.625rem; border-radius: 9999px; background: rgb(255 255 255 / 0.07); color: #fff !important; font: 500 0.875rem/1.25rem var(--g-font); text-decoration: none !important; }
+.g-details .itemExternalLinks a::before { content: "public"; font: 400 1.25rem/1 "Material Icons"; color: var(--g-muted); }
+.g-details .itemExternalLinks a:hover { background: rgb(255 255 255 / 0.12); }
+.g-details .itemExternalLinks a:has(img, svg)::before { display: none; }
+.g-details .itemTags { margin: 0 !important; font: 400 0.875rem/1.25rem var(--g-font) !important; color: var(--g-muted); }
+.g-details .itemTags a { color: var(--g-muted) !important; font-weight: 400; }
+.g-details .itemTags a:hover { color: #fff !important; }
+
 /* Sections du bas de la fiche */
 .detailVerticalSection .sectionTitle { margin-bottom: 0.5rem; }
 #castContent .personCard .cardText-secondary { color: var(--g-muted) !important; }
+/* Distribution en cercles (maquette) */
+.personCard .cardPadder-overflowPortrait, .personCard .cardPadder-portrait { padding-bottom: 100% !important; }
 
 /* Liste des épisodes */
 .listItem { border-radius: var(--g-radius) !important; border: 0 !important; }
@@ -286,6 +573,70 @@ h1.itemName { font-size: clamp(2rem, 4.5vw, 4.5rem) !important; }
 .listItemBodyText.secondary, .listItem .secondary { color: var(--g-muted) !important; font-weight: 400; }
 .listItem-overview { color: var(--g-muted) !important; }
 .listViewUserDataButtons .paper-icon-button-light { color: var(--g-muted); }
+
+/* Épisodes d'une saison (maquette) : n° | vignette 11rem | titre, infos, résumé 2 lignes | actions ; filet entre les lignes */
+#itemDetailPage .vertical-list > .listItem { position: relative; margin: 0 !important; padding: 0.75rem !important; border: 0 !important; border-radius: 6px !important; background: none; font-size: 0.875rem; }
+#itemDetailPage .vertical-list > .listItem + .listItem::before { content: ""; position: absolute; top: 0; left: 0; right: 0; border-top: 1px solid rgb(255 255 255 / 0.07); }
+#itemDetailPage .vertical-list > .listItem:hover, #itemDetailPage .vertical-list > .listItem:focus-within { background: rgb(255 255 255 / 0.07) !important; }
+#itemDetailPage .vertical-list > .listItem:hover::before, #itemDetailPage .vertical-list > .listItem:hover + .listItem::before { border-color: transparent; }
+#itemDetailPage .vertical-list .listItem-content { display: grid; grid-template-columns: 2rem 11rem minmax(0, 1fr) auto; align-items: center; gap: 1rem; }
+#itemDetailPage .vertical-list .listItem-content:not(:has(> .g-ep-n)) { grid-template-columns: 11rem minmax(0, 1fr) auto; }
+#itemDetailPage .g-ep-n { text-align: center; font: 400 1.25rem/1.75rem var(--g-font); color: var(--g-muted); font-variant-numeric: tabular-nums; }
+#itemDetailPage .vertical-list .listItemImage { position: relative; width: 11rem !important; height: auto !important; aspect-ratio: 16 / 9; margin: 0 !important; border-radius: 6px !important; overflow: hidden; background-size: cover; background-color: rgb(255 255 255 / 0.05); }
+#itemDetailPage .vertical-list .listItemImageButton { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; display: grid; place-items: center; border-radius: 0 !important; background: rgb(0 0 0 / 0.4) !important; opacity: 0; }
+#itemDetailPage .vertical-list .listItem:hover .listItemImageButton, #itemDetailPage .vertical-list .listItemImageButton:focus-visible { opacity: 1; }
+#itemDetailPage .vertical-list .listItemImageButton-icon { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 9999px; background: var(--g-accent); color: #000 !important; font-size: 1.25rem !important; }
+#itemDetailPage .vertical-list .listItemImage .indicators, #itemDetailPage .vertical-list .listItemIndicators { position: absolute; top: 0.375rem; right: 0.375rem; }
+#itemDetailPage .vertical-list .listItemImage .playedIndicator { min-width: 1.25rem; height: 1.25rem !important; }
+#itemDetailPage .vertical-list .listItemImage .playedIndicator .indicatorIcon { font-size: 0.875rem !important; }
+#itemDetailPage .vertical-list .listItemImage .itemProgressBar { position: absolute; left: 0.5rem; right: 0.5rem; bottom: 0.5rem; }
+#itemDetailPage .vertical-list .listItemBody { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; padding: 0 !important; }
+#itemDetailPage .vertical-list .listItemBody[data-action="link"] { cursor: pointer; border-radius: 4px; outline: none; }
+#itemDetailPage .vertical-list .listItemBody[data-action="link"]:hover > .listItemBodyText:first-child { text-decoration: underline; }
+#itemDetailPage .vertical-list .listItemBody[data-action="link"]:focus-visible { outline: 2px solid var(--g-accent); outline-offset: 4px; }
+#itemDetailPage .vertical-list .listItemBodyText { margin: 0 !important; font: 600 1rem/1.5rem var(--g-font) !important; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* L'heure de fin n'aide pas à choisir un épisode : elle reste sur la fiche de l'épisode */
+#itemDetailPage .vertical-list .listItemMediaInfo .endsAt { display: none !important; }
+#itemDetailPage .vertical-list .listItemMediaInfo { display: flex; flex-wrap: wrap; align-items: center; gap: 0 0.5rem; font: 400 0.875rem/1.25rem var(--g-font) !important; color: var(--g-muted) !important; white-space: normal; }
+#itemDetailPage .vertical-list .listItemMediaInfo .mediaInfoItem { margin: 0 !important; display: inline-flex; align-items: center; gap: 0.25rem; }
+#itemDetailPage .vertical-list .listItemMediaInfo .mediaInfoItem + .mediaInfoItem::before { content: "·"; margin-right: 0.5rem; }
+#itemDetailPage .vertical-list .listItemMediaInfo .starIcon { font-size: 1rem !important; color: var(--g-muted) !important; }
+#itemDetailPage .vertical-list .listItem-overview { margin: 0 !important; font: 400 0.875rem/1.25rem var(--g-font) !important; color: var(--g-muted) !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; }
+#itemDetailPage .vertical-list .listItem-overview p { margin: 0; display: inline; }
+#itemDetailPage .vertical-list .listViewUserDataButtons { display: flex; align-items: center; gap: 0.25rem; margin: 0 !important; }
+#itemDetailPage .vertical-list .listItemButton { width: 2rem; height: 2rem; margin: 0 !important; padding: 0 !important; display: grid; place-items: center; border-radius: 9999px; color: var(--g-muted) !important; }
+#itemDetailPage .vertical-list .listItemButton:hover { background: rgb(255 255 255 / 0.1) !important; color: #fff !important; }
+#itemDetailPage .vertical-list .listItemButton .material-icons { font-size: 1.25rem !important; }
+#itemDetailPage .vertical-list .listItemButton[data-action="link"] { display: none; }
+#itemDetailPage .vertical-list .listItemButton .playstatebutton-icon-played, #itemDetailPage .vertical-list .listItemButton .ratingbutton-icon-withrating { color: var(--g-accent) !important; }
+/* Souris : actions visibles au survol de la ligne ; un état actif (vu, favori) reste affiché */
+/* Pas en dessous de 40em : les boutons ont leur propre rangée, la masquer laisserait un trou */
+@media (hover: hover) and (pointer: fine) and (min-width: 40em) {
+  #itemDetailPage .vertical-list .listItemButton { opacity: 0; }
+  #itemDetailPage .vertical-list > .listItem:is(:hover, :focus-within) .listItemButton,
+  #itemDetailPage .vertical-list .listItemButton:has(.playstatebutton-icon-played, .ratingbutton-icon-withrating) { opacity: 1; }
+}
+/* Prochain épisode à regarder (groove.js pose data-gnext) */
+#itemDetailPage .vertical-list > .listItem[data-gnext] { background: rgb(255 255 255 / 0.04); }
+#itemDetailPage .vertical-list > .listItem[data-gnext] .g-ep-n { color: var(--g-accent); font-weight: 600; }
+#itemDetailPage .vertical-list > .listItem[data-gnext] .listItemImageButton { opacity: 1; }
+#itemDetailPage .vertical-list > .listItem[data-gnext] .listItemMediaInfo::before { content: "À suivre"; font-weight: 600; color: var(--g-accent); }
+#itemDetailPage .vertical-list > .listItem[data-gresume] .listItemMediaInfo::before { content: "Reprendre"; }
+#itemDetailPage .vertical-list > .listItem[data-gnext] .listItemMediaInfo .mediaInfoItem:first-child::before { content: "·"; margin-right: 0.5rem; }
+@media (max-width: 39.99em) {
+  #itemDetailPage .vertical-list .listItem-content, #itemDetailPage .vertical-list .listItem-content:not(:has(> .g-ep-n)) { grid-template-columns: 8rem minmax(0, 1fr); align-items: start; gap: 0.75rem; }
+  #itemDetailPage .g-ep-n, #itemDetailPage .vertical-list .listItem-overview { display: none !important; }
+  #itemDetailPage .vertical-list .listItemImage { width: 8rem !important; }
+  #itemDetailPage .vertical-list .listViewUserDataButtons { grid-column: 2; margin-top: -0.25rem !important; }
+  #itemDetailPage .vertical-list .listItem-bottomoverview { margin: 0.5rem 0 0 !important; font: 400 0.875rem/1.25rem var(--g-font) !important; color: var(--g-muted) !important; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+}
+
+/* Épisode : Précédent / Suivant (pilules secondaires de la maquette) */
+.g-epnav { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.g-epnav a { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5625rem 1rem 0.5625rem 0.875rem; border-radius: 9999px; background: rgb(255 255 255 / 0.1); color: #fff; font: 600 0.875rem/1.25rem var(--g-font); text-decoration: none; }
+.g-epnav a.g-next { padding: 0.5625rem 0.875rem 0.5625rem 1rem; }
+.g-epnav a:hover { background: rgb(255 255 255 / 0.15); }
+.g-epnav svg { width: 1rem; height: 1rem; fill: currentColor; }
 
 /* ---------- Commandes partagées ---------- */
 .emby-button { border-radius: 9999px !important; text-transform: none !important; font-weight: 600 !important; letter-spacing: 0 !important; }
@@ -307,8 +658,26 @@ h1.itemName { font-size: clamp(2rem, 4.5vw, 4.5rem) !important; }
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1);
   color: #fff !important;
 }
-.emby-input:focus, .emby-textarea:focus, .emby-select-withcolor:focus { box-shadow: inset 0 0 0 2px #fff !important; outline: none; }
+/* outline: none doit l'emporter sur le :focus-visible global, sinon les champs ont deux contours blancs */
+.emby-input:focus, .emby-textarea:focus, .emby-select-withcolor:focus { box-shadow: inset 0 0 0 2px #fff !important; outline: none !important; }
 .emby-select option { background: var(--g-elevated); }
+
+/* Recherche : champ en pilule (loupe dedans), suggestions en puces alignées à gauche */
+#searchPage .searchFields { padding-top: 1.5rem; padding-bottom: 0.5rem; }
+#searchPage .searchFieldsInner { position: relative; justify-content: flex-start !important; max-width: 40rem; margin: 0 !important; }
+/* Bouton Jellyseerr (plugin) : centré sur la hauteur du champ (3rem), pas sur celle de son conteneur */
+#searchPage #jellyseerr-search-icon { top: 1.5rem !important; right: 0.75rem !important; width: 1.75rem; height: 1.75rem; transform: translateY(-50%) !important; object-fit: contain; }
+#searchPage .searchfields-icon { position: absolute; z-index: 1; left: 1rem; top: 50%; transform: translateY(-50%); margin: 0 !important; font-size: 1.5rem; color: var(--g-muted); pointer-events: none; }
+#searchPage .searchFieldsInner .inputContainer { margin: 0 !important; }
+#searchPage .searchFieldsInner .inputLabel { display: none; }
+#searchPage .searchfields-txtSearch { height: 3rem; padding: 0 3rem 0 3.25rem !important; border-radius: 9999px !important; background: var(--g-raised) !important; box-shadow: none; font: 400 1rem/1.5rem var(--g-font) !important; }
+#searchPage .searchfields-txtSearch:hover { background: var(--g-elevated) !important; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); }
+#searchPage .searchfields-txtSearch::placeholder { color: var(--g-muted); opacity: 1; }
+#searchPage .searchSuggestions { text-align: left; margin-top: 1rem; }
+#searchPage .searchSuggestions .sectionTitle { margin-bottom: 0.75rem !important; text-align: left; }
+#searchPage .searchSuggestionsList { display: flex; flex-wrap: wrap; gap: 0.5rem; max-width: 56rem; }
+#searchPage .searchSuggestionsList .button-link { display: block; margin: 0 !important; padding: 0.5rem 1rem !important; border-radius: 9999px; background: var(--g-raised); color: #fff !important; font: 500 0.875rem/1.25rem var(--g-font) !important; text-decoration: none !important; }
+#searchPage .searchSuggestionsList .button-link:hover { background: var(--g-elevated); }
 .inputLabelFocused, .selectLabelFocused, .textareaLabelFocused { color: #fff !important; }
 .emby-checkbox:checked + span + .checkboxOutline, .emby-checkbox:checked + .checkboxOutline { background: var(--g-accent) !important; border-color: var(--g-accent) !important; }
 .emby-checkbox:checked + span + .checkboxOutline .checkboxIcon-checked { color: #000 !important; }
@@ -358,6 +727,90 @@ h1.itemName { font-size: clamp(2rem, 4.5vw, 4.5rem) !important; }
 .chapterThumbContainer { border-radius: 6px !important; overflow: hidden; outline: 2px solid #fff; background: #000 !important; }
 .chapterThumbTextContainer { background: rgb(0 0 0 / 0.8) !important; }
 
+/* ---------- Lecteur (maquette) ---------- */
+/* En-tête : retour rond, série en petit + « S1:E1 · Titre », puis fin · favori · lire sur */
+.skinHeader.osdHeader { backdrop-filter: none !important; height: auto !important; padding: 1.5rem 2rem 4rem !important; background: none !important; }
+.skinHeader.osdHeader::before { content: ""; position: absolute; inset: 0 0 auto; height: 9rem; z-index: -1; pointer-events: none; background: linear-gradient(to bottom, rgb(0 0 0 / 0.8), transparent); }
+.osdHeader .headerTop { max-height: none !important; padding: 0 !important; align-items: flex-start !important; gap: 0.75rem; }
+.osdHeader .headerLeft { display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1; }
+.osdHeader .headerRight { display: flex; align-items: center; gap: 0.25rem; }
+.osdHeader .headerButton { width: 2.5rem !important; height: 2.5rem !important; margin: 0 !important; padding: 0 !important; display: grid !important; place-items: center; border-radius: 9999px !important; color: rgb(255 255 255 / 0.9) !important; }
+.osdHeader .headerButton:hover { background: rgb(255 255 255 / 0.1) !important; color: #fff !important; }
+.osdHeader .headerButton .material-icons { font-size: 1.25rem !important; }
+.osdHeader .headerBackButton { background: rgb(255 255 255 / 0.1) !important; }
+.osdHeader .headerBackButton .arrow_back::before { content: "\e5cb"; }
+.osdHeader .headerLeft:has(.g-osd-title) .pageTitle { display: none !important; }
+/* 12.1 : barre React */
+.videoOsd-appBar { background: transparent !important; box-shadow: none !important; backdrop-filter: none !important; min-height: 0 !important; padding: 0 !important; gap: 0.75rem; align-items: center !important; }
+.videoOsd-appBar > p { min-width: 0; flex: 1; font: 600 1.25rem/1.75rem var(--g-font) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.videoOsd-appBar:has(> .g-osd-title) > p { display: none !important; }
+.videoOsd-appBar > .g-osd-title { flex: 1; }
+.videoOsd-appBar > .MuiBox-root:last-child { display: flex; align-items: center; gap: 0.25rem; }
+.videoOsd-appBar .MuiIconButton-root, .videoOsd-appBar .g-osd-fav { width: 2.5rem !important; height: 2.5rem !important; padding: 0 !important; margin: 0 !important; display: grid !important; place-items: center; border: 0; border-radius: 9999px !important; background: none; color: rgb(255 255 255 / 0.9) !important; cursor: pointer; }
+.videoOsd-appBar .MuiIconButton-root:hover, .videoOsd-appBar .g-osd-fav:hover { background: rgb(255 255 255 / 0.1) !important; color: #fff !important; }
+.videoOsd-appBar .MuiSvgIcon-root { font-size: 1.25rem !important; }
+/* Retour : rond gris avec chevron (maquette) au lieu de la flèche */
+.videoOsd-appBar > button:first-child { flex: none; background: rgb(255 255 255 / 0.1) !important; }
+.videoOsd-appBar > button:first-child .MuiSvgIcon-root { display: none; }
+.videoOsd-appBar > button:first-child::before { content: ""; width: 1.25rem; height: 1.25rem; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M15.75 19.5 8.25 12l7.5-7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M15.75 19.5 8.25 12l7.5-7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
+.g-osd-title { min-width: 0; }
+.g-osd-title p { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-osd-l1 { font: 400 0.875rem/1.25rem var(--g-font); color: rgb(255 255 255 / 0.8); }
+.g-osd-l2 { font: 600 1.25rem/1.75rem var(--g-font); color: #fff; }
+.g-osd-ends { margin: 0; padding: 0 0.5rem; font: 400 0.875rem/1.25rem var(--g-font); color: rgb(255 255 255 / 0.8); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.g-osd-fav svg { width: 1rem; height: 1rem; fill: currentColor; }
+.g-osd-fav[aria-pressed="true"] { color: var(--g-accent) !important; }
+.skinHeader:not(.osdHeader) :is(.g-osd-ends, .g-osd-fav, .g-osd-title) { display: none !important; }
+@media (max-width: 39.99em) { .g-osd-ends { display: none; } .skinHeader.osdHeader { padding: 1rem 1rem 3rem !important; } }
+
+/* Bas : temps · barre fine · temps, puis Pause verte, précédent/suivant, -10/+10, volume, réglages à droite */
+.videoOsdBottom { padding: 6rem 2rem 1.5rem !important; background: linear-gradient(to top, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.6) 50%, transparent) !important; }
+.videoOsdBottom .osdControls { display: flex; flex-direction: column; gap: 0.5rem; padding: 0 !important; }
+.videoOsdBottom .osdMainTextContainer, .videoOsdBottom .osdSecondaryMediaInfo { display: none !important; }
+.videoOsdBottom .osdControls > .flex { gap: 0.75rem; }
+.videoOsdBottom .osdPositionText, .videoOsdBottom .osdDurationText { flex: none; width: 4rem; margin: 0 !important; font: 400 0.875rem/1.25rem var(--g-font) !important; color: rgb(255 255 255 / 0.85) !important; font-variant-numeric: tabular-nums; }
+.videoOsdBottom .osdPositionText { text-align: right; }
+.videoOsdBottom .osdDurationText { text-align: left; cursor: pointer; }
+.videoOsdBottom .sliderContainer { margin: 0 !important; }
+.videoOsdBottom .mdl-slider-background-flex { height: 4px !important; margin-top: -2px; border-radius: 9999px; background: rgb(255 255 255 / 0.2) !important; overflow: hidden; }
+.videoOsdBottom .mdl-slider-background-lower { background: #fff !important; }
+.videoOsdBottom .mdl-slider-container:hover .mdl-slider-background-lower { background: var(--g-accent) !important; }
+.videoOsdBottom .mdl-slider-background-upper { background: rgb(255 255 255 / 0.4) !important; }
+.videoOsdBottom .mdl-slider::-webkit-slider-thumb { width: 12px !important; height: 12px !important; background: #fff !important; opacity: 0; transition: opacity 0.15s; }
+.videoOsdBottom .mdl-slider::-moz-range-thumb { width: 12px !important; height: 12px !important; background: #fff !important; opacity: 0; }
+.videoOsdBottom .mdl-slider-container:hover .mdl-slider::-webkit-slider-thumb, .videoOsdBottom .mdl-slider:focus-visible::-webkit-slider-thumb { opacity: 1; }
+.videoOsdBottom .mdl-slider-container:hover .mdl-slider::-moz-range-thumb { opacity: 1; }
+.videoOsdBottom .sliderMarker { width: 2px !important; height: 4px !important; border-radius: 0 !important; background: rgb(0 0 0 / 0.7) !important; }
+.videoOsdBottom .buttons { display: flex; align-items: center; gap: 0.5rem; padding: 0 !important; }
+.videoOsdBottom .buttons > div[dir] { display: contents; }
+.videoOsdBottom .buttons::after { content: ""; order: 0; flex: 1; }
+.videoOsdBottom .buttons .paper-icon-button-light { width: 2.5rem; height: 2.5rem; margin: 0 !important; padding: 0 !important; display: grid; place-items: center; border-radius: 9999px; color: rgb(255 255 255 / 0.9) !important; background: none; }
+.videoOsdBottom .buttons .paper-icon-button-light.hide { display: none !important; }
+.videoOsdBottom .buttons .paper-icon-button-light:hover { background: rgb(255 255 255 / 0.1) !important; color: #fff !important; }
+.videoOsdBottom .buttons .material-icons { font-size: 1.25rem !important; }
+.videoOsdBottom .buttons svg { width: 1.25rem; height: 1.25rem; }
+.videoOsdBottom .btnPause { order: -10; width: 2.75rem !important; height: 2.75rem !important; background: var(--g-accent) !important; color: #000 !important; transition: transform 0.15s; }
+.videoOsdBottom .btnPause:hover { background: var(--g-accent-strong) !important; color: #000 !important; transform: scale(1.05); }
+.videoOsdBottom .btnPause .material-icons { color: #000 !important; }
+.videoOsdBottom .btnRecord { order: -11; }
+.videoOsdBottom .btnPreviousTrack, .videoOsdBottom .btnPreviousChapter { order: -9; }
+.videoOsdBottom .btnNextTrack, .videoOsdBottom .btnNextChapter { order: -8; }
+.videoOsdBottom .btnRewind { order: -7; }
+.videoOsdBottom .btnFastForward { order: -6; }
+.videoOsdBottom .volumeButtons { order: -5; display: flex; align-items: center; gap: 0.25rem; }
+.videoOsdBottom .osdVolumeSliderContainer { width: 6rem !important; margin: 0 !important; }
+.videoOsdBottom #popupPreviewButton { order: 1; }
+.videoOsdBottom .btnAudio { order: 2; }
+.videoOsdBottom .btnSubtitles { order: 3; }
+.videoOsdBottom #jeBookmarkBtn { order: 4; }
+.videoOsdBottom .btnVideoOsdSettings { order: 5; }
+.videoOsdBottom .btnAirPlay { order: 6; }
+.videoOsdBottom .btnPip { order: 7; }
+.videoOsdBottom .btnFullscreen { order: 8; }
+/* Favori et heure de fin passent dans l'en-tête ; la note de Jellyfin Enhanced n'est pas dans la maquette */
+.videoOsdBottom .btnUserRating, .videoOsdBottom .osdTimeText, .videoOsdBottom #je-osd-rating-container { display: none !important; }
+@media (max-width: 47.99em) { .videoOsdBottom { padding: 6rem 1rem 0.75rem !important; } .videoOsdBottom .btnRewind, .videoOsdBottom .btnFastForward, .videoOsdBottom .osdVolumeSliderContainer { display: none !important; } }
+
 /* Passer l'intro / segments, épisode suivant */
 .skip-button {
   background: #fff !important; color: #000 !important;
@@ -395,7 +848,16 @@ h1.itemName { font-size: clamp(2rem, 4.5vw, 4.5rem) !important; }
   html.groove-sb #groove-sidebar { display: flex; }
   /* Les pages Jellyfin sont en position absolue sur toute la largeur : on les décale et on les rétrécit. */
   html.groove-sb main { margin-left: var(--g-off); }
-  html.groove-sb .mainAnimatedPage { right: auto !important; width: calc(100% - var(--g-off)) !important; }
+  html.groove-sb .mainAnimatedPage { top: 0.5rem !important; right: auto !important; width: calc(100% - var(--g-off) - 0.5rem) !important; }
+  /* Contenu dans un panneau arrondi, comme la maquette */
+  html.groove-sb .page:not(#videoOsdPage):not(#loginPage) { border-radius: var(--g-radius); min-height: calc(100vh - var(--g-appbar, 4rem) - 1rem); }
+  html.groove-sb .groove-dhero { border-radius: var(--g-radius) var(--g-radius) 0 0; }
+  html.groove-sb .g-sticky { top: calc(var(--g-appbar, 4rem) + 0.5rem); left: var(--g-off); right: 0.5rem; }
+  html.groove-sb .page:not(#videoOsdPage):not(#loginPage) { overflow-x: clip; }
+  html.groove-sb body::before, html.groove-sb body::after { content: ""; position: fixed; z-index: 999; pointer-events: none; left: var(--g-off); right: 0.5rem; height: var(--g-radius); }
+  html.groove-sb body::before { top: calc(var(--g-appbar, 4rem) + 0.5rem); border-radius: var(--g-radius) var(--g-radius) 0 0; box-shadow: 0 calc(-1 * var(--g-radius)) 0 var(--g-radius) #000; }
+  html.groove-sb body::after { bottom: 0.5rem; border-radius: 0 0 var(--g-radius) var(--g-radius); box-shadow: 0 var(--g-radius) 0 var(--g-radius) #000; }
+  html.groove-sb.groove-sb-playing body::after { display: none; }
   html.groove-sb .alphaPicker-fixed-right { right: 0.5rem; }
 }
 #groove-sidebar {
@@ -409,44 +871,77 @@ h1.itemName { font-size: clamp(2rem, 4.5vw, 4.5rem) !important; }
 }
 html.groove-sb-collapsed #groove-sidebar { width: 4.5rem; }
 html.groove-sb-playing #groove-sidebar { bottom: 5.5rem; }
-#groove-sidebar .g-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0.5rem 0.5rem 1rem; }
-html.groove-sb-collapsed #groove-sidebar .g-head { justify-content: center; padding: 0.75rem 0; }
-#groove-sidebar .g-title {
-  display: flex; align-items: center; gap: 0.75rem;
-  background: none; border: 0; padding: 0.25rem; border-radius: 6px;
-  color: var(--g-muted); font: 700 1rem var(--g-font); cursor: pointer;
-}
+#groove-sidebar .g-mi { font-size: 1.125rem; line-height: 1; }
+/* En-tête : « Médiathèques » (16 px semi-gras, gris) + bouton « + » de 32 px */
+#groove-sidebar .g-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.75rem 0.5rem 0.75rem 1rem; }
+html.groove-sb-collapsed #groove-sidebar .g-head { flex-direction: column; padding: 0.75rem 0; }
+#groove-sidebar .g-title { display: flex; align-items: center; gap: 0.75rem; background: none; border: 0; padding: 0; border-radius: 6px; color: var(--g-muted); font: 600 1rem/1.5rem var(--g-font); cursor: pointer; }
 #groove-sidebar .g-title:hover { color: #fff; }
-#groove-sidebar .g-chips { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; padding: 0 1rem 0.5rem; }
-#groove-sidebar .g-chips::-webkit-scrollbar { display: none; }
-#groove-sidebar .g-chip {
-  flex: none; border: 0; border-radius: 9999px; padding: 0.375rem 0.75rem;
-  background: rgb(255 255 255 / 0.07); color: #fff; font: 500 0.875rem var(--g-font); cursor: pointer; white-space: nowrap;
-}
-#groove-sidebar .g-chip:hover { background: rgb(255 255 255 / 0.12); }
-#groove-sidebar .g-chip[aria-pressed="true"] { background: #fff; color: #000; }
-#groove-sidebar .g-list { list-style: none; margin: 0; padding: 0 0.5rem 0.5rem; overflow-y: auto; flex: 1; min-height: 0; }
-#groove-sidebar .g-item {
-  display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.5rem; border-radius: 6px;
-  color: #fff; text-decoration: none;
-}
-#groove-sidebar .g-item:hover { background: var(--g-hover); }
+#groove-sidebar .g-ib { flex: none; width: 2rem; height: 2rem; display: grid; place-items: center; border: 0; border-radius: 9999px; background: none; color: var(--g-muted); text-decoration: none; cursor: pointer; }
+#groove-sidebar .g-ib:hover { background: rgb(255 255 255 / 0.1); color: #fff; }
+/* Recherche + tri */
+#groove-sidebar .g-tools { display: flex; align-items: center; justify-content: space-between; padding: 0 1rem 0.25rem; }
+#groove-sidebar .g-sort { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border: 0; border-radius: 9999px; background: none; color: var(--g-muted); font: 400 0.875rem/1.25rem var(--g-font); cursor: pointer; }
+#groove-sidebar .g-sort:hover { color: #fff; }
+/* Entrées : mosaïque 48 px, titre et sous-titre 14 px */
+#groove-sidebar .g-list { margin: 0; padding: 0 0.5rem 0.5rem; overflow-y: auto; flex: 1; min-height: 0; scrollbar-width: thin; }
+#groove-sidebar .g-list ul { list-style: none; margin: 0; padding: 0; }
+/* Sections Plateformes / Médiathèques / Collections / Listes de lecture */
+#groove-sidebar .g-list section { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--g-line); }
+#groove-sidebar .g-sec { display: flex; align-items: baseline; justify-content: space-between; margin: 0; padding: 0.25rem 0.5rem; color: var(--g-subtle); font: 600 0.8125rem/1.25rem var(--g-font); }
+#groove-sidebar .g-sec a { color: var(--g-muted); font-weight: 500; text-decoration: none; }
+#groove-sidebar .g-sec a:hover { color: #fff; text-decoration: underline; }
+/* Plateforme : la ligne n'est pas un lien, la vignette et les pilules (Films 4, Séries 55) le sont */
+#groove-sidebar .g-plat { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 6px; }
+#groove-sidebar .g-plat:has([aria-current]) { background: rgb(255 255 255 / 0.1); }
+#groove-sidebar .g-plat > .g-item { padding: 0; }
+#groove-sidebar .g-plat > .g-item:hover, #groove-sidebar .g-plat > .g-item[aria-current] { background: none; }
+#groove-sidebar .g-pills { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem; }
+#groove-sidebar .g-pills a { padding: 0.125rem 0.625rem; border-radius: 9999px; background: var(--g-hover); color: #fff; font: 500 0.8125rem/1.25rem var(--g-font); text-decoration: none; white-space: nowrap; }
+#groove-sidebar .g-pills a:hover { background: rgb(255 255 255 / 0.14); }
+#groove-sidebar .g-pills a[aria-current] { background: #fff; color: #000; }
+#groove-sidebar .g-pills .g-n { color: var(--g-muted); }
+#groove-sidebar .g-pills a[aria-current] .g-n { color: rgb(0 0 0 / 0.6); }
+#groove-sidebar .g-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 6px; color: #fff; text-decoration: none; }
+#groove-sidebar .g-item:hover { background: rgb(255 255 255 / 0.07); }
 #groove-sidebar .g-item[aria-current="page"] { background: rgb(255 255 255 / 0.1); }
-#groove-sidebar .g-thumb {
-  flex: none; width: 3rem; height: 3rem; border-radius: 4px; overflow: hidden;
-  display: grid; grid-template-columns: 1fr 1fr; background: var(--g-elevated); place-items: center;
-}
+#groove-sidebar .g-thumb { flex: none; width: 3rem; height: 3rem; border-radius: 6px; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr; background: var(--g-elevated); place-items: center; color: var(--g-subtle); }
 #groove-sidebar .g-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 #groove-sidebar .g-thumb:not(.g-single) img { aspect-ratio: 1; }
 #groove-sidebar .g-thumb.g-single { grid-template-columns: 1fr; }
-#groove-sidebar .g-thumb.g-fav { background: linear-gradient(135deg, #4b1fbf, #7fc8d6); color: #fff; }
+#groove-sidebar .g-thumb.g-fav { background: linear-gradient(to bottom right, oklch(0.45 0.2 285), oklch(0.75 0.1 200)); color: #fff; }
 #groove-sidebar .g-text { min-width: 0; flex: 1; }
-#groove-sidebar .g-name { font: 500 0.9375rem/1.3 var(--g-font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#groove-sidebar .g-sub { font: 400 0.8125rem/1.3 var(--g-font); color: var(--g-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-#groove-sidebar .g-icon { width: 1.25rem; height: 1.25rem; fill: currentColor; flex: none; }
-html.groove-sb-collapsed #groove-sidebar .g-text, html.groove-sb-collapsed #groove-sidebar .g-chips, html.groove-sb-collapsed #groove-sidebar .g-label { display: none; }
-html.groove-sb-collapsed #groove-sidebar .g-item { justify-content: center; }
+#groove-sidebar .g-name, #groove-sidebar .g-sub { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#groove-sidebar .g-name { font: 500 0.875rem/1.25rem var(--g-font); }
+#groove-sidebar .g-sub { font: 400 0.875rem/1.25rem var(--g-font); color: var(--g-muted); }
+#groove-sidebar .g-icon { width: 1rem; height: 1rem; fill: currentColor; flex: none; }
+/* Pied « Plus » dépliable */
+#groove-sidebar .g-more { border-top: 1px solid rgb(255 255 255 / 0.1); padding: 0.5rem; }
+#groove-sidebar .g-more summary { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; border-radius: 6px; list-style: none; color: var(--g-muted); font: 600 0.875rem/1.25rem var(--g-font); cursor: pointer; }
+#groove-sidebar .g-more summary::-webkit-details-marker { display: none; }
+#groove-sidebar .g-more summary:hover { color: #fff; }
+#groove-sidebar .g-more summary .g-mi { transition: transform 0.15s; }
+#groove-sidebar .g-more[open] summary .g-mi { transform: rotate(90deg); }
+#groove-sidebar .g-more ul { list-style: none; margin: 0; padding: 0.25rem 0 0; }
+#groove-sidebar .g-more a { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; border-radius: 6px; color: var(--g-muted); font: 400 0.875rem/1.25rem var(--g-font); text-decoration: none; }
+#groove-sidebar .g-more a:hover { background: rgb(255 255 255 / 0.07); color: #fff; }
+html.groove-sb-collapsed #groove-sidebar :is(.g-text, .g-label, .g-tools, .g-more, .g-sec, .g-hide-collapsed) { display: none; }
+html.groove-sb-collapsed #groove-sidebar :is(.g-item, .g-plat) { justify-content: center; }
+
+/* Menus de Groove (créer, trier) */
+.g-menu { position: fixed; z-index: 1300; min-width: 14rem; max-width: 20rem; padding: 0.25rem; border-radius: 6px; background: var(--g-elevated); box-shadow: 0 16px 48px rgb(0 0 0 / 0.6); }
+.g-menu-h { margin: 0; padding: 0.5rem 0.75rem 0.25rem; font: 700 0.75rem/1rem var(--g-font); color: var(--g-muted); }
+.g-menu > button { display: flex; align-items: center; gap: 0.75rem; width: 100%; min-height: 2.5rem; padding: 0 0.75rem; border: 0; border-radius: 4px; background: none; color: #fff; font: 400 0.875rem var(--g-font); text-align: left; cursor: pointer; }
+.g-menu > button:hover, .g-menu > button:focus-visible { background: rgb(255 255 255 / 0.1); }
+.g-menu > button .g-mi { font-size: 1.125rem; color: var(--g-muted); }
+.g-menu > button[aria-checked="true"] { color: var(--g-accent); }
+.g-menu .g-ok { margin-left: auto; color: var(--g-accent) !important; }
+.g-menu-form { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; }
+.g-menu-form label { font: 600 0.875rem var(--g-font); }
+.g-menu-form input { height: 2.5rem; padding: 0 0.75rem; border: 0; border-radius: 6px; background: rgb(255 255 255 / 0.07); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1); color: #fff; font: 400 0.875rem var(--g-font); }
+.g-menu-form input:focus { outline: none; box-shadow: inset 0 0 0 2px #fff; }
+.g-menu-form div { display: flex; justify-content: flex-end; }
+.g-menu-err { margin: 0; font: 400 0.8125rem var(--g-font); color: var(--g-danger); }
 
 /* ---------- Bannière d'accueil (groove.js, remplace Spotlight) ---------- */
 .groove-hero { position: relative; isolation: isolate; overflow: hidden; margin: 0 0 1.5rem; min-height: clamp(22rem, 52vh, 36rem); display: flex; align-items: flex-end; }
@@ -466,7 +961,7 @@ html.groove-sb-collapsed #groove-sidebar .g-item { justify-content: center; }
   padding: 0.6rem 1.25rem 0.6rem 0.9rem; border: 0; border-radius: 9999px; cursor: pointer;
   font: 700 0.875rem/1.25rem var(--g-font); text-decoration: none;
 }
-.groove-btn svg { width: 1.25rem; height: 1.25rem; fill: currentColor; }
+.groove-btn svg { width: 1rem; height: 1rem; fill: currentColor; }
 .groove-btn-primary { background: var(--g-accent); color: #000; }
 .groove-btn-primary:hover { background: var(--g-accent-strong); transform: scale(1.03); }
 .groove-btn-secondary { background: rgb(255 255 255 / 0.15); color: #fff; }
@@ -488,3 +983,10 @@ html.groove-sb-collapsed #groove-sidebar .g-item { justify-content: center; }
   #itemDetailPage .detailPagePrimaryContent, #itemDetailPage .detailPageSecondaryContainer { padding-left: 1rem !important; padding-right: 1rem !important; }
   #itemDetailPage .detailSection { padding-left: 0 !important; margin-left: 0 !important; }
 }
+
+
+/* ---------- Lecteur BD : page ajustée à la largeur, défilement vertical (bandes de scans) ---------- */
+/* !important : le CSS du lecteur Jellyfin est chargé à la demande, son ordre par rapport au thème n'est pas garanti. */
+#comicsPlayer .swiper-slide { overflow-y: auto !important; }
+#comicsPlayer .slider-zoom-container { height: auto !important; }
+#comicsPlayer .swiper-slide-img { width: 100% !important; max-width: 900px; height: auto !important; max-height: none !important; }
